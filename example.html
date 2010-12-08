@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script class="jsbin" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js"></script>
+<script src="qTransform.js"></script>
+<meta charset=utf-8 />
+<title>JS Bin - CSS3 Transform Prototype</title>
+<!--[if IE]>
+  <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+<![endif]-->
+<style>
+  article, aside, figure, footer, header, hgroup, 
+  menu, nav, section { display: block; }
+  #myDiv {
+  background-color: #F00;
+   width: 200px;
+   height: 200px;
+   margin: 0 200px;
+}
+</style>
+</head>
+<body>
+  <p id="hello">Hello World</p>
+  <div id="myDiv"></div>
+</body>
+<script>
+
+
+$('#myDiv')  
+  .animate({translate: 100}, 2000, 'swing')
+  .animate({translateX: 0}, 2000)
+  .animate({translateY: -50}, 2000)
+  .animate({rotate: 0}, 2000, 'swing')
+  .animate({scaleX: 0.7, scaleY:0.7}, 2000)
+
+</script>
+</html>
