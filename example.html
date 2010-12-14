@@ -27,11 +27,17 @@
 
 
 $('#myDiv')  
+  .animate({translateY: '-=25px'}, 2000)
+  .animate({translateX: -25}, 500)
   .animate({translate: 100}, 2000, 'swing')
-  .animate({translateX: 0}, 2000)
-  .animate({translateY: -50}, 2000)
-  .animate({rotate: 0}, 2000, 'swing')
-  .animate({scaleX: 0.7, scaleY:0.7}, 2000)
+  .animate({translateX: -100}, 2000)
+  .animate({scale: 0.3}, 2000)
+  .animate({rotate: 1}, 2000, 'swing')
+  .animate({scaleX: 0.1}, 2000)
+  .animate({rotate: 2}, 2000, 'swing')
+  .animate({scale: 1}, 500, 'swing')
+  .delay(300)
+  .animate({rotate: 0}, 200 )
 
 </script>
 </html>
