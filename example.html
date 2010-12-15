@@ -11,28 +11,38 @@
 <style>
   article, aside, figure, footer, header, hgroup, 
   menu, nav, section { display: block; }
+  body { height: 800px; width: 800px; border: 1px solid red;}
   #myDiv {
-  background-color: #F00;
+   background-color: #FF0;
+   position: absolute;
+   padding: -80px;
    width: 200px;
    height: 200px;
    margin: 0 200px;
+   left: 100px;
+   border: 1px solid green;
+   hasLayout: true;
+   zoom: 1;
 }
+#hold { border: 1px solid gray;}
 </style>
 </head>
 <body>
   <p id="hello">Hello World</p>
+  <div id="hold">
   <div id="myDiv"></div>
+  </div>
 </body>
 <script>
 
 
 $('#myDiv')  
-  .animate({translateY: '-=25px'}, 2000)
+  .animate({translateX: '250px'}, 2000)
   .animate({translateX: -25}, 500)
-  .animate({translate: 100}, 2000, 'swing')
+  .animate({translate: 100}, 200, 'swing')
   .animate({translateX: -100}, 2000)
   .animate({scale: 0.3}, 2000)
-  .animate({rotate: 1}, 2000, 'swing')
+  .animate({rotate: 2}, 2000)
   .animate({scaleX: 0.1}, 2000)
   .animate({rotate: 2}, 2000, 'swing')
   .animate({scale: 1}, 500, 'swing')

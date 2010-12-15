@@ -96,78 +96,59 @@
 			fnc: parseFloat}
 		];
 		
-	jQuery.each(props, function(n,prop){
-		jQuery.each(prop.subProps, function(num, sub){
-			var _cssProp, _prop = prop;
-			
-			if( $.isArray(sub) ) {
-				//composite transform
-				_cssProp = _prop.prop;
-				var _sub = sub;
-				$.cssHooks[_cssProp] = {
-					set: function( elem, val ) {
-						jQuery.each(_sub, function(num, x){
-							$.cssHooks[_cssProp+x].set(elem, val);
-						});
-					},
-					get: function( elem, computed ) {
-						var val = [];
-						jQuery.each(_sub, function(num, x){
-							val.push( $.cssHooks[_cssProp+x].get(elem, val) );
-						});
-						//hack until jQuery supports animating multiple properties
-						return val[0] || val[1];
-					}
-				}
-			} else {
-				//independent transfrom
-				_cssProp = _prop.prop+sub;
-				$.cssHooks[_cssProp] = {
-					set: function( elem, val ) {
-						if(!val) return;
+        jQuery.each(props, function(n,prop){
+        jQuery.each(prop.subProps, function(num, sub){
+            var _cssProp, _prop = prop;
 
-			            if (typeof val === 'string') {
-			                val = val.split(',');
-			                jQuery.each(function(i, val) {
-			                    val[i] = _prop.fnc(val[i]);
-			                });
-			            }
-					
-						$.data( elem, _cssProp, val);
-						
-			            if (!$.support.matrixFilter) {
-						    setCSSTransform( elem, val, _cssProp, _prop.unit);
-			            } else {
-							var m, matrix = [];
-							for( var i=0; i<_prop.matrix[num].length; i++) {
-								m = _prop.matrix[num][i];
-								matrix.push( jQuery.isFunction(m) ? m(val[0]) : m );
-							}
-			                return $.cssHooks.matrix.set( elem, matrix );
-			            }
-					},
-					get: function( elem, computed ) {
-			            var p = $.data( elem, _cssProp );
-			            return p ? p : _prop._default || 0;
-			        }
-				};
-			}
-			
-			$.fx.step[_cssProp] = function( fx ) {
-		      $.cssHooks[_cssProp].set( fx.elem, fx.now+($.cssNumber[_cssProp] ? '' : fx.unit) );
-		    };
-		})
-		
-	})
+            if( $.isArray(sub) ) {
+                //composite transform
+                _cssProp = _prop.prop;
+                var _sub = sub;
+                $.cssHooks[_cssProp] = {
+                    set: function( elem, val ) {
+                        jQuery.each(_sub, function(num, x){
+                            $.cssHooks[_cssProp+x].set(elem, val);
+                        });
+                    },
+                    get: function( elem, computed ) {
+                        var val = [];
+                        jQuery.each(_sub, function(num, x){
+                            val.push( $.cssHooks[_cssProp+x].get(elem, val) );
+                        });
+                        //hack until jQuery supports animating multiple properties
+                        return val[0] || val[1];
+                    }
+                }
+            } else {
+                //independent transfrom
+                _cssProp = _prop.prop+sub;
+                $.cssHooks[_cssProp] = {
+                    set: function( elem, val ) {
+                        $.data( elem, _cssProp, _prop.fnc(val));
+
+                        setCSSTransform( elem, val, _cssProp, _prop.unit);
+                    },
+                    get: function( elem, computed ) {
+                        var p = $.data( elem, _cssProp );
+                        return p ? p : _prop._default || 0;
+                    }
+                };
+            }
+
+            $.fx.step[_cssProp] = function( fx ) {
+                $.cssHooks[_cssProp].set( fx.elem, fx.now+($.cssNumber[_cssProp] ? '' : fx.unit) );
+            };
+        })
+    });
 
     function setCSSTransform( elem, val, prop, unit ){
         if(typeof val === 'number') {
             val = [val];
         }
 
-		if($.support.matrixFilter) {
-			return ieMatrix(elem, val);
-		}
+        if($.support.matrixFilter) {
+            return setIEMatrix(elem, val);
+        }
         
         //parse css string
         var allProps = parseCSSTransform(elem);
@@ -190,11 +171,11 @@
                     if(prop !== 'matrix') {
                         result += prop+'(';
                         result += a === 'X' || a === '' ? val[0]+unit : 
-							(arr[0] !== '' ? arr[0] : $.cssHooks[prop+'X'].get(elem)+unit);
+                            (arr[0] !== '' ? arr[0] : $.cssHooks[prop+'X'].get(elem)+unit);
                         result += a === 'Y' ? ', '+val[0]+unit : 
                             (arr[1] !== '' ? ', '+arr[1] : 
-							(prop+'Y' in $.cssHooks ? 
-								', '+$.cssHooks[prop+'Y'].get(elem)+unit : ''));
+                            (prop+'Y' in $.cssHooks ? 
+                                ', '+$.cssHooks[prop+'Y'].get(elem)+unit : ''));
                         result += ') ';
                     } else { 
                         result += val[0]+' ';
@@ -221,7 +202,7 @@
         
         //set all transform properties
         elem.style[$.cssProps.transform] = result;
-		console.log(elem.style[$.cssProps.transform]);
+        console.log(elem.style[$.cssProps.transform]);
     }
 
     
@@ -262,12 +243,12 @@
 
     $.rotate = {
       radToDeg: function radToDeg( rad ) {
-	      return rad * 180 / Math.PI;
-	    }
+          return rad * 180 / Math.PI;
+      }
     };
 
-	//IE Matrix Handling
-	
+    //IE Matrix Handling
+
     //  fake an origin (IE8)
     if($.support.transformOrigin === false && $.support.matrixFilter === true) {
         $.cssNumber.transformOrigin = 
@@ -319,98 +300,99 @@
                     case 'center': return '50%';
                     case 'bottom': return '100%';
                 }
-				return originY ? originY : '50%';
+                return originY ? originY : '50%';
             }
         };
     }
 
-	//special case for IE matrix
-    function ieMatrix( elem, mat ) {
-            var inverse, current, ang, org, originX, originY,
-            runTransform = $.cssProps.transformOrigin === 'matrixFilter' ? true : false;
-            
-			current = [$.cssHooks.scaleX.get(elem),
+    //special case for IE matrix
+    function setIEMatrix( elem, mat ) {
+        var inverse, current, ang, org, originX, originY,
+        runTransform = $.cssProps.transformOrigin === 'matrixFilter' ? true : false;
+
+        current = [$.cssHooks.scaleX.get(elem),
                     $.cssHooks.skewY.get(elem),
                     $.cssHooks.skewX.get(elem),
                     $.cssHooks.scaleY.get(elem),
                     $.cssHooks.translateX.get(elem),
                     $.cssHooks.translateY.get(elem)];
 
-            //start by multiply inverse of transform origin by matrix
-            if(runTransform) {
-                originX = $.cssHooks.transformOriginX.get(elem);
-				originY = $.cssHooks.transformOriginY.get(elem);
-				originX = originX.indexOf('%') > 1 ? 
-					(/[\d]*/.exec(originX) / 100) * elem.offsetWidth : originX;
-				originY = originY.indexOf('%') > 1 ? 
-					(/[\d]*/.exec(originY) / 100) * elem.offsetWidth : originY;
-                inverse = [ 1, 0, 0, 1, -originX, -originY];
-                org = [ 1, 0, 0, 1, originX, originY];
+        //start by multiply inverse of transform origin by matrix
+        if(runTransform) {
+            originX = $.cssHooks.transformOriginX.get(elem);
+            originY = $.cssHooks.transformOriginY.get(elem);
+            originX = originX.indexOf('%') > 1 ? 
+                (/[\d]*/.exec(originX) / 100) * elem.offsetWidth : originX;
+            originY = originY.indexOf('%') > 1 ? 
+                (/[\d]*/.exec(originY) / 100) * elem.offsetWidth : originY;
+            inverse = [ 1, 0, 0, 1, -originX, -originY];
+            org = [ 1, 0, 0, 1, originX, originY];
 
-				current = [ ( (inverse[0]*current[0]) + (inverse[1]*current[2]) ),
-                            ( (inverse[0]*current[1]) + (inverse[1]*current[3]) ),
-                            ( (inverse[2]*current[0]) + (inverse[3]*current[2]) ),
-                            ( (inverse[2]*current[1]) + (inverse[3]*current[3]) ),
-                            ( (inverse[4]*current[0]) + (inverse[5]*current[2]) ),
-                            ( (inverse[4]*current[1]) + (inverse[5]*current[3]) )
-                            ];
-            } 
+            current = [ ( (inverse[0]*current[0]) + (inverse[1]*current[2]) ),
+                        ( (inverse[0]*current[1]) + (inverse[1]*current[3]) ),
+                        ( (inverse[2]*current[0]) + (inverse[3]*current[2]) ),
+                        ( (inverse[2]*current[1]) + (inverse[3]*current[3]) ),
+                        ( (inverse[4]*current[0]) + (inverse[5]*current[2]) + current[4]),
+                        ( (inverse[4]*current[1]) + (inverse[5]*current[3]) + current[5] )
+                        ];  
 
-			//multiply old matrix to new matrix
-			if(mat == undefined || (typeof mat === 'array' && mat.length !== 6)) {
-                mat = current;
-            } else {
-				mat = [ ( (current[0]*mat[0]) + (current[1]*mat[2]) ),
-	                    ( (current[0]*mat[1]) + (current[1]*mat[3]) ),
-	                    ( (current[2]*mat[0]) + (current[3]*mat[2]) ),
-	                    ( (current[2]*mat[1]) + (current[3]*mat[3]) ),
-	                    ( (current[4]*mat[0]) + (current[5]*mat[2]) ),
-	                    ( (current[4]*mat[1]) + (current[5]*mat[3]) )
-	                    ];
-			}
-			
-            //multiply the transform and rotation matrixes
-            ang = $.data(elem, 'rotate');
-            if(ang) {
-                var cos = Math.cos(ang);
-                var sin = Math.sin(ang);
-            
-                ang = [cos, -sin, sin, cos];
-            	mat = [ ( (mat[0]*ang[0]) + (mat[1]*ang[2]) ),
-                        ( (mat[0]*ang[1]) + (mat[1]*ang[3]) ),
-                        ( (mat[2]*ang[0]) + (mat[3]*ang[2]) ),
-                        ( (mat[2]*ang[1]) + (mat[3]*ang[3]) ),
-                        ( (mat[4]*ang[0]) + (mat[5]*ang[2]) ),
-                        ( (mat[4]*ang[1]) + (mat[5]*ang[3]) )
-                        ];
-            }
-            
-            //multiply the transform origin
-            if(runTransform) {
-                mat = [ ( (mat[0]*org[0]) + (mat[1]*org[2]) ),
-                        ( (mat[0]*org[1]) + (mat[1]*org[3]) ),
-                        ( (mat[2]*org[0]) + (mat[3]*org[2]) ),
-                        ( (mat[2]*org[1]) + (mat[3]*org[3]) ),
-                        ( (mat[4]*org[0]) + (mat[5]*org[2]) ),
-                        ( (mat[4]*org[1]) + (mat[5]*org[3]) )
-                        ];
-            }
-            
-            //apply the matrix as a IE filter
-            if (runTransform) {
-                elem.style.filter = [
-                    "progid:DXImageTransform.Microsoft.Matrix(",
-                    "M11="+mat[0]+",",
-                    "M12="+mat[1]+",",
-                    "M21="+mat[2]+",",
-                    "M22="+mat[3]+",",
-                    "Dx="+ mat[4]+",",
-                    "Dy="+ mat[5]+",",
-                    "SizingMethod='auto expand'",
-                    ")"
-                ].join('');
+        } 
+
+        //multiply old matrix to new matrix
+        if( typeof mat !== 'array' || mat.length !== 6 ) {
+            mat = current;
+        } else {
+            mat = [ ( (current[0]*mat[0]) + (current[1]*mat[2]) ),
+                    ( (current[0]*mat[1]) + (current[1]*mat[3]) ),
+                    ( (current[2]*mat[0]) + (current[3]*mat[2]) ),
+                    ( (current[2]*mat[1]) + (current[3]*mat[3]) ),
+                    ( (current[4]*mat[0]) + (current[5]*mat[2]) + mat[4]),
+                    ( (current[4]*mat[1]) + (current[5]*mat[3]) + mat[5])
+                    ];
         }
+
+        //multiply the transform and rotation matrixes
+        ang = $.data(elem, 'rotate');
+        if(ang) {
+            var cos = Math.cos(ang);
+            var sin = Math.sin(ang);
+
+            ang = [cos, -sin, sin, cos];
+            mat = [ ( (mat[0]*ang[0]) + (mat[1]*ang[2]) ),
+                    ( (mat[0]*ang[1]) + (mat[1]*ang[3]) ),
+                    ( (mat[2]*ang[0]) + (mat[3]*ang[2]) ),
+                    ( (mat[2]*ang[1]) + (mat[3]*ang[3]) ),
+                    ( (mat[4]*ang[0]) + (mat[5]*ang[2]) ),
+                    ( (mat[4]*ang[1]) + (mat[5]*ang[3]) )
+                    ];
+        }
+          
+        //multiply the transform origin
+        if(runTransform) {
+            mat = [ ( (mat[0]*org[0]) + (mat[1]*org[2]) ),
+                    ( (mat[0]*org[1]) + (mat[1]*org[3]) ),
+                    ( (mat[2]*org[0]) + (mat[3]*org[2]) ),
+                    ( (mat[2]*org[1]) + (mat[3]*org[3]) ),
+                    ( (mat[4]*org[0]) + (mat[5]*org[2]) + org[4]),
+                    ( (mat[4]*org[1]) + (mat[5]*org[3]) + org[5])
+                    ];
+
+        }
+        
+        //apply the matrix as a IE filter
+        elem.style.filter = [
+            "progid:DXImageTransform.Microsoft.Matrix(",
+            "M11="+mat[0]+", ",
+            "M12="+mat[1]+", ",
+            "M21="+mat[2]+", ",
+            "M22="+mat[3]+", ",
+            "SizingMethod='auto expand'",
+            ")"
+            ].join('');
+        elem.style.left = mat[4];
+        elem.style.top = mat[5];
+        elem.style.position = 'absolute';
+
     }
 
-  
 })(jQuery);
