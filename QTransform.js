@@ -7,10 +7,10 @@
  */
  //
 (function($) {
-      
+
     var div = document.createElement('div'),
       divStyle = div.style;
-      
+
     //give props to those who dont have them
     $.cssProps.transform = 
         divStyle.MozTransform === '' ? 'MozTransform' :
@@ -26,14 +26,14 @@
         (divStyle.OTransformOrigin === '' ? 'OTransformOrigin' :
         (divStyle.TransformOrigin === '' ? 'TransformOrigin' :
         false))));
-	
+
     //define supported or not
     $.support.transform = $.cssProps.transform !== false || divStyle.filter === '' ? true : false;
     $.support.transformOrigin = $.cssProps.transformOrigin !== false ? true : false;
 
     //if ONLY IE matrixes are supported (IE9 beta6 will use css3)
     $.support.matrixFilter = (divStyle.filter === '' && $.cssProps.transform === false) ?
- 		true : false;
+        true : false;
     div = null;
 
     //stop if no form of transforms are supported
@@ -50,52 +50,51 @@
     $.cssNumber.rotate = 
     $.cssNumber.matrix = true;
 
+    //create hooks for css transforms
+    var rtn = function(v){return v;};
+    var xy = [['X','Y'],'X','Y'];
+    var abcdxy = [['A','B','C','D','X','Y'],'A','B','C','D','X','Y']
+    var props = [
+        {prop: 'rotate', 
+            matrix: [function(v){ return Math.cos(v); },
+                function(v){ return -Math.sin(v); },
+                function(v){ return Math.sin(v); },
+                function(v){ return Math.cos(v); } ],
+            unit: 'rad',
+            subProps: [''],
+            fnc: toRadian},
+        {prop: 'scale',
+            matrix: [[rtn,0,0,rtn],
+                [rtn,0,0,1],
+                [1,0,0,rtn]],
+            unit: '',
+            subProps: xy,
+            fnc: parseFloat,
+            _default:1},
+        {prop: 'skew',
+            matrix: [[1,rtn,rtn,1],
+                [1,rtn,0,1],
+                [1,0,rtn,1]],
+            unit: 'rad',
+            subProps: xy,
+            fnc: toRadian},
+        {prop: 'translate',
+            matrix: [[1,0,0,1,rtn,rtn],
+                [1,0,0,1,rtn,0],
+                [1,0,0,1,0,rtn]],
+            subProps: xy,
+            fnc: parseFloat},
+        {prop: 'matrix',
+            matrix: [[rtn,rtn,rtn,rtn,rtn,rtn],
+                [rtn,0,0,1,0,0],
+                [1,rtn,0,1,0,0],
+                [1,0,rtn,1,0,0],
+                [1,0,0,rtn,0,0],
+                [1,0,0,1,0,rtn]],
+            subProps: abcdxy,
+            fnc: parseFloat}
+        ];
 
-	//create hooks for css transforms
-	var rtn = function(v){return v;};
-	var xy = [['X','Y'],'X','Y'];
-	var abcdxy = [['A','B','C','D','X','Y'],'A','B','C','D','X','Y']
-	var props = [
-		{prop: 'rotate', 
-			matrix: [function(v){ return Math.cos(v); },
-				function(v){ return -Math.sin(v); },
-				function(v){ return Math.sin(v); },
-				function(v){ return Math.cos(v); } ],
-			unit: 'rad',
-			subProps: [''],
-			fnc: toRadian},
-		{prop: 'scale',
-			matrix: [[rtn,0,0,rtn],
-				[rtn,0,0,1],
-				[1,0,0,rtn]],
-			unit: '',
-			subProps: xy,
-			fnc: parseFloat,
-			_default:1},
-		{prop: 'skew',
-			matrix: [[1,rtn,rtn,1],
-				[1,rtn,0,1],
-				[1,0,rtn,1]],
-			unit: 'rad',
-			subProps: xy,
-			fnc: toRadian},
-		{prop: 'translate',
-			matrix: [[1,0,0,1,rtn,rtn],
-				[1,0,0,1,rtn,0],
-				[1,0,0,1,0,rtn]],
-			subProps: xy,
-			fnc: parseFloat},
-		{prop: 'matrix',
-			matrix: [[rtn,rtn,rtn,rtn,rtn,rtn],
-				[rtn,0,0,1,0,0],
-				[1,rtn,0,1,0,0],
-				[1,0,rtn,1,0,0],
-				[1,0,0,rtn,0,0],
-				[1,0,0,1,0,rtn]],
-			subProps: abcdxy,
-			fnc: parseFloat}
-		];
-		
         jQuery.each(props, function(n,prop){
         jQuery.each(prop.subProps, function(num, sub){
             var _cssProp, _prop = prop;
@@ -195,7 +194,7 @@
                 } 
             }
         }
-            
+        
         //if prop was not found to be updated, then dump data
         if(!wasUpdated)
             result += prop+a+'('+val[0]+unit+ ') ';
