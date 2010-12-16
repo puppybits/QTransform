@@ -185,6 +185,8 @@
             var inverse, mat, ang, org;
             var runTransform = $.cssHooks.transformOrigin === 'matrixFilter' ? true : false;
             
+            
+  
             //if matrix not valid get values from each transform property
             if(mat == undefined || (typeof mat === 'array' && mat.length !== 6)) {
                 mat = [$.cssHooks.scaleX.get(elem) || $.cssHooks.scale.get(elem),
@@ -197,14 +199,18 @@
             
             //get origin for IE8
             if(runTransform) {
-				var originX = $.cssHooks.transformOriginX.get(elem);
-				var originY = $.cssHooks.transformOriginY.get(elem);
-				originX = originX.indexOf('%') > 1 ? 
-					(/[\d]*/.exec(originX) / 100) * elem.offsetWidth : originX;
-				originY = originY.indexOf('%') > 1 ? 
-					(/[\d]*/.exec(originY) / 100) * elem.offsetWidth : originY;
-                inverse = [ 1, 0, 0, 1, -originX, -originY];
-                org = [ 1, 0, 0, 1, originX, originY];
+                elem.style.filter = [
+                    "progid:DXImageTransform.Microsoft.Matrix(M11=1,M12=0,M21=0,M22=1,SizingMethod='auto expand')"
+                ].join('');
+                var Wp = $.cssHooks.transformOriginX.get(elem);
+                var Hp = $.cssHooks.transformOriginY.get(elem);
+                Wp = Wp.indexOf('%') > 1 ? 
+                    (/[\d]*/.exec(Wp) / 100) * elem.offsetWidth : Wp;
+                Hp = Hp.indexOf('%') > 1 ? 
+                    (/[\d]*/.exec(Hp) / 100) * elem.offsetWidth : Hp;
+                
+                var Wb = elem.offsetWidth;
+                var Hb = elem.offsetHeight;
             }
             
             
@@ -216,22 +222,7 @@
                 var sin = Math.sin(ang);
             
                 ang = [cos, -sin, sin, cos];
-            }
-            
-            //--multiply the matries
-            //multiply inverse of transform origin by matrix
-            if(runTransform) {
-                mat = [ ( (inverse[0]*mat[0]) + (inverse[1]*mat[2]) ),
-                        ( (inverse[0]*mat[1]) + (inverse[1]*mat[3]) ),
-                        ( (inverse[2]*mat[0]) + (inverse[3]*mat[2]) ),
-                        ( (inverse[2]*mat[1]) + (inverse[3]*mat[3]) ),
-                        ( (inverse[4]*mat[0]) + (inverse[5]*mat[2]) ),
-                        ( (inverse[4]*mat[1]) + (inverse[5]*mat[3]) )
-                        ];
-            } 
-            
-            //multiply the transform and rotation matrixes
-            if(ang) {    
+             
                 mat = [ ( (mat[0]*ang[0]) + (mat[1]*ang[2]) ),
                         ( (mat[0]*ang[1]) + (mat[1]*ang[3]) ),
                         ( (mat[2]*ang[0]) + (mat[3]*ang[2]) ),
@@ -241,33 +232,32 @@
                         ];
             }
             
-            //multiply the transform origin
-            if(runTransform) {
-                mat = [ ( (mat[0]*org[0]) + (mat[1]*org[2]) ),
-                        ( (mat[0]*org[1]) + (mat[1]*org[3]) ),
-                        ( (mat[2]*org[0]) + (mat[3]*org[2]) ),
-                        ( (mat[2]*org[1]) + (mat[3]*org[3]) ),
-                        ( (mat[4]*org[0]) + (mat[5]*org[2]) ),
-                        ( (mat[4]*org[1]) + (mat[5]*org[3]) )
-                        ];
-            }
+            mat = [ ( (mat[0]*org[0]) + (mat[1]*org[2]) ),
+                    ( (mat[0]*org[1]) + (mat[1]*org[3]) ),
+                    ( (mat[2]*org[0]) + (mat[3]*org[2]) ),
+                    ( (mat[2]*org[1]) + (mat[3]*org[3]) ),
+                    ( (mat[4]*org[0]) + (mat[5]*org[2]) ),
+                    ( (mat[4]*org[1]) + (mat[5]*org[3]) )
+                    ];
             
             //apply the matrix as a IE filter
+            elem.style.filter = [
+                "progid:DXImageTransform.Microsoft.Matrix(",
+                "M11="+mat[0]+",",
+                "M12="+mat[1]+",",
+                "M21="+mat[2]+",",
+                "M22="+mat[3]+",",
+                "SizingMethod='auto expand'",
+                ")"
+            ].join('');
+            
             if (runTransform) {
-                elem.style.filter = [
-                    "progid:DXImageTransform.Microsoft.Matrix(",
-                    "M11="+mat[0]+",",
-                    "M12="+mat[1]+",",
-                    "M21="+mat[2]+",",
-                    "M22="+mat[3]+",",
-                    "Dx="+ mat[4]+",",
-                    "Dy="+ mat[5]+",",
-                    "SizingMethod='auto expand'",
-                    ")"
-                ].join('');
-            } else {
-                //set the css3 matrix as a string
-            }
+                var Wo = elem.offsetWidth;
+                var Ho = elem.offsetHeight;
+                elem.style.position = 'relative';
+                elem.style.left = Wp * (Wb - Wo);
+                elem.style.top  = Hp * (Hb - Ho);
+            } 
         },
         get: function( elem, computed ) {
             //Use indivual transform properies to animate
@@ -357,6 +347,10 @@
         });
         
         return props !== undefined ? props : null ;
+    }
+    
+    function ieOrigin(o, n, percent) {
+        return percent * (boundingBoxLength - originalLength);
     }
 
     function toRadian(value) {
