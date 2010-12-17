@@ -122,10 +122,11 @@
                 //independent transfrom
                 _cssProp = _prop.prop+sub;
                 $.cssHooks[_cssProp] = {
-                    set: function( elem, val ) {
-                        $.data( elem, _cssProp, _prop.fnc(val));
+                    set: function( elem, val, unit ) {
+                        val = _prop.fnc(val);
+                        $.data( elem, _cssProp, val);
 
-                        setCSSTransform( elem, val, _cssProp, _prop.unit);
+                        setCSSTransform( elem, val, _cssProp, unit || _prop.unit);
                     },
                     get: function( elem, computed ) {
                         var p = $.data( elem, _cssProp );
@@ -135,16 +136,13 @@
             }
 
             $.fx.step[_cssProp] = function( fx ) {
-                $.cssHooks[_cssProp].set( fx.elem, fx.now+($.cssNumber[_cssProp] ? '' : fx.unit) );
-            };
+                var unit = ($.cssNumber[_cssProp] ? '' : fx.unit);
+                $.cssHooks[_cssProp].set( fx.elem, fx.now, unit);
+             };
         })
     });
 
     function setCSSTransform( elem, val, prop, unit ){
-        if(typeof val === 'number') {
-            val = [val];
-        }
-
         if($.support.matrixFilter) {
             return setIEMatrix(elem, val);
         }
@@ -169,15 +167,15 @@
                     //update parsed data with new value
                     if(prop !== 'matrix') {
                         result += prop+'(';
-                        result += a === 'X' || a === '' ? val[0]+unit : 
+                        result += a === 'X' || a === '' ? val+unit : 
                             (arr[0] !== '' ? arr[0] : $.cssHooks[prop+'X'].get(elem)+unit);
-                        result += a === 'Y' ? ', '+val[0]+unit : 
+                        result += a === 'Y' ? ', '+val+unit : 
                             (arr[1] !== '' ? ', '+arr[1] : 
                             (prop+'Y' in $.cssHooks ? 
                                 ', '+$.cssHooks[prop+'Y'].get(elem)+unit : ''));
                         result += ') ';
                     } else { 
-                        result += val[0]+' ';
+                        result += val+' ';
                     }
                     wasUpdated = true;
                 } else {
@@ -197,7 +195,7 @@
         
         //if prop was not found to be updated, then dump data
         if(!wasUpdated)
-            result += prop+a+'('+val[0]+unit+ ') ';
+            result += prop+a+'('+val+unit+ ') ';
         
         //set all transform properties
         elem.style[$.cssProps.transform] = result;
@@ -230,7 +228,11 @@
         
         return props !== undefined ? props : null ;
     }
-
+    
+    function ieOrigin(o, n, percent) {
+        return percent * (o - n);
+    }
+    
     function toRadian(value) {
       if(value.indexOf("deg") != -1) {
         return parseInt(value,10) * (Math.PI * 2 / 360);
@@ -318,23 +320,19 @@
 
         //start by multiply inverse of transform origin by matrix
         if(runTransform) {
-            originX = $.cssHooks.transformOriginX.get(elem);
-            originY = $.cssHooks.transformOriginY.get(elem);
-            originX = originX.indexOf('%') > 1 ? 
-                (/[\d]*/.exec(originX) / 100) * elem.offsetWidth : originX;
-            originY = originY.indexOf('%') > 1 ? 
-                (/[\d]*/.exec(originY) / 100) * elem.offsetWidth : originY;
-            inverse = [ 1, 0, 0, 1, -originX, -originY];
-            org = [ 1, 0, 0, 1, originX, originY];
+            elem.style.filter = [
+                "progid:DXImageTransform.Microsoft.Matrix"
+                +"(M11=1,M12=0,M21=0,M22=1,SizingMethod='auto expand')"
+            ].join('');
+            var Wp = $.cssHooks.transformOriginX.get(elem);
+            var Hp = $.cssHooks.transformOriginY.get(elem);
+            Wp = Wp.indexOf('%') > 1 ? 
+                (/[\d]*/.exec(Wp) / 100) * elem.offsetWidth : Wp;
+            Hp = Hp.indexOf('%') > 1 ? 
+                (/[\d]*/.exec(Hp) / 100) * elem.offsetWidth : Hp;
 
-            current = [ ( (inverse[0]*current[0]) + (inverse[1]*current[2]) ),
-                        ( (inverse[0]*current[1]) + (inverse[1]*current[3]) ),
-                        ( (inverse[2]*current[0]) + (inverse[3]*current[2]) ),
-                        ( (inverse[2]*current[1]) + (inverse[3]*current[3]) ),
-                        ( (inverse[4]*current[0]) + (inverse[5]*current[2]) + current[4]),
-                        ( (inverse[4]*current[1]) + (inverse[5]*current[3]) + current[5] )
-                        ];  
-
+            var Wb = elem.offsetWidth;
+            var Hb = elem.offsetHeight;
         } 
 
         //multiply old matrix to new matrix
@@ -344,9 +342,7 @@
             mat = [ ( (current[0]*mat[0]) + (current[1]*mat[2]) ),
                     ( (current[0]*mat[1]) + (current[1]*mat[3]) ),
                     ( (current[2]*mat[0]) + (current[3]*mat[2]) ),
-                    ( (current[2]*mat[1]) + (current[3]*mat[3]) ),
-                    ( (current[4]*mat[0]) + (current[5]*mat[2]) + mat[4]),
-                    ( (current[4]*mat[1]) + (current[5]*mat[3]) + mat[5])
+                    ( (current[2]*mat[1]) + (current[3]*mat[3]) )
                     ];
         }
 
@@ -360,22 +356,8 @@
             mat = [ ( (mat[0]*ang[0]) + (mat[1]*ang[2]) ),
                     ( (mat[0]*ang[1]) + (mat[1]*ang[3]) ),
                     ( (mat[2]*ang[0]) + (mat[3]*ang[2]) ),
-                    ( (mat[2]*ang[1]) + (mat[3]*ang[3]) ),
-                    ( (mat[4]*ang[0]) + (mat[5]*ang[2]) ),
-                    ( (mat[4]*ang[1]) + (mat[5]*ang[3]) )
+                    ( (mat[2]*ang[1]) + (mat[3]*ang[3]) )
                     ];
-        }
-          
-        //multiply the transform origin
-        if(runTransform) {
-            mat = [ ( (mat[0]*org[0]) + (mat[1]*org[2]) ),
-                    ( (mat[0]*org[1]) + (mat[1]*org[3]) ),
-                    ( (mat[2]*org[0]) + (mat[3]*org[2]) ),
-                    ( (mat[2]*org[1]) + (mat[3]*org[3]) ),
-                    ( (mat[4]*org[0]) + (mat[5]*org[2]) + org[4]),
-                    ( (mat[4]*org[1]) + (mat[5]*org[3]) + org[5])
-                    ];
-
         }
         
         //apply the matrix as a IE filter
@@ -388,10 +370,14 @@
             "SizingMethod='auto expand'",
             ")"
             ].join('');
-        elem.style.left = mat[4];
-        elem.style.top = mat[5];
-        elem.style.position = 'absolute';
-
+            
+        if (runTransform) {
+            var Wo = elem.offsetWidth;
+            var Ho = elem.offsetHeight;
+            elem.style.position = 'relative';
+            elem.style.left = Wp * (Wb - Wo);
+            elem.style.top  = Hp * (Hb - Ho);
+        }
     }
 
 })(jQuery);
