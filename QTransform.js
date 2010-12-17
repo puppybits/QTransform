@@ -234,12 +234,14 @@
     }
     
     function toRadian(value) {
-      if(value.indexOf("deg") != -1) {
-        return parseInt(value,10) * (Math.PI * 2 / 360);
-      } else if (value.indexOf("grad") != -1) {
-        return parseInt(value,10) * (Math.PI/200);
-      }
-      return parseFloat(value);
+        if(typeof value === 'number') {
+            return parseFloat(value);
+        }
+        if(value.indexOf("deg") != -1) {
+            return parseInt(value,10) * (Math.PI * 2 / 360);
+        } else if (value.indexOf("grad") != -1) {
+            return parseInt(value,10) * (Math.PI/200);
+        }
     }
 
     $.rotate = {
@@ -327,9 +329,9 @@
             var Wp = $.cssHooks.transformOriginX.get(elem);
             var Hp = $.cssHooks.transformOriginY.get(elem);
             Wp = Wp.indexOf('%') > 1 ? 
-                (/[\d]*/.exec(Wp) / 100) * elem.offsetWidth : Wp;
+                (/[\d]*/.exec(Wp) / 100) : Wp;
             Hp = Hp.indexOf('%') > 1 ? 
-                (/[\d]*/.exec(Hp) / 100) * elem.offsetWidth : Hp;
+                (/[\d]*/.exec(Hp) / 100) : Hp;
 
             var Wb = elem.offsetWidth;
             var Hb = elem.offsetHeight;
@@ -375,8 +377,8 @@
             var Wo = elem.offsetWidth;
             var Ho = elem.offsetHeight;
             elem.style.position = 'relative';
-            elem.style.left = Wp * (Wb - Wo);
-            elem.style.top  = Hp * (Hb - Ho);
+            elem.style.left = Wp * (Wb - Wo) + (mat[4] || 0);
+            elem.style.top  = Hp * (Hb - Ho) + (mat[5] || 0);
         }
     }
 
