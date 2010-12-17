@@ -18,8 +18,6 @@
    padding: -80px;
    width: 200px;
    height: 200px;
-   margin: 0 200px;
-   left: 100px;
    border: 1px solid green;
    hasLayout: true;
    zoom: 1;
@@ -36,15 +34,14 @@
 <script>
 
 
-$('#myDiv')  
-  .animate({translateX: '250px'}, 2000)
-  .animate({translateY: -25}, 500)
-  .animate({translate: 100}, 200, 'swing')
-  .animate({translateX: -100}, 2000)
-  .animate({scale: 0.3}, 2000)
-  .animate({rotate: 2}, 2000)
+$('#myDiv')
+  .animate({translate: 200}, 2000, 'swing')
+  .animate({translateY: 0}, 1000)
+  .animate({translateX: 100}, 2000)
+  .animate({scaleY: 0.3}, 2000)
   .animate({scaleX: 0.1}, 2000)
-  .animate({rotate: 2}, 2000, 'swing')
+  .animate({rotate: 2}, 2000)
+  .animate({rotate: -2}, 2000, 'swing')
   .animate({scale: 1}, 500, 'swing')
   .delay(300)
   .animate({rotate: 0}, 200 )

@@ -104,9 +104,9 @@
                 _cssProp = _prop.prop;
                 var _sub = sub;
                 $.cssHooks[_cssProp] = {
-                    set: function( elem, val ) {
+                    set: function( elem, val, unit ) {
                         jQuery.each(_sub, function(num, x){
-                            $.cssHooks[_cssProp+x].set(elem, val);
+                            $.cssHooks[_cssProp+x].set(elem, val, unit);
                         });
                     },
                     get: function( elem, computed ) {
@@ -205,9 +205,9 @@
     
     function parseCSSTransform( elem ) {
         var props, prop, name, transform;
-		//break up into single transform calls
+        //break up into single transform calls
         $(elem.style[$.cssProps.transform].replace(/(?:\,\s|\)|\()/g,"|").split(" "))
-		//read each data point for the transform call
+        //read each data point for the transform call
         .each(function(i, item){
             if(item !== '') {
                 if(props === undefined) props = {}
@@ -344,7 +344,9 @@
             mat = [ ( (current[0]*mat[0]) + (current[1]*mat[2]) ),
                     ( (current[0]*mat[1]) + (current[1]*mat[3]) ),
                     ( (current[2]*mat[0]) + (current[3]*mat[2]) ),
-                    ( (current[2]*mat[1]) + (current[3]*mat[3]) )
+                    ( (current[2]*mat[1]) + (current[3]*mat[3]) ),
+                    mat[4],
+                    mat[5]
                     ];
         }
 
@@ -358,7 +360,9 @@
             mat = [ ( (mat[0]*ang[0]) + (mat[1]*ang[2]) ),
                     ( (mat[0]*ang[1]) + (mat[1]*ang[3]) ),
                     ( (mat[2]*ang[0]) + (mat[3]*ang[2]) ),
-                    ( (mat[2]*ang[1]) + (mat[3]*ang[3]) )
+                    ( (mat[2]*ang[1]) + (mat[3]*ang[3]) ),
+                    mat[4],
+                    mat[5]
                     ];
         }
         
