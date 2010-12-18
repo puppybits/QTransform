@@ -1,0 +1,10 @@
+v0.8    - scale, skew, rotate, translate working cross-browser                      12.14.2010
+v0.9    - transform origin working cross-browser                                    12.17.2010
+v0.95   - matrix working cross-browser
+-- MILESTONE --
+v1      - add unit tests
+            single instance of each transform property
+            animatable 
+            unit tests
+-- MILESTONE --
+v1.5    - support for webkit 3d transforms
