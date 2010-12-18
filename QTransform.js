@@ -26,6 +26,15 @@
         (divStyle.OTransformOrigin === '' ? 'OTransformOrigin' :
         (divStyle.TransformOrigin === '' ? 'TransformOrigin' :
         false))));
+        
+    $.cssHooks.transform = {
+        set: function(elem, val) {
+            elem.style[$.cssProps.transform] = val;
+        },
+        get: function(elem, computed) {
+            return elem.style[$.cssProps.transform];
+        }
+    }
 
     //define supported or not
     $.support.transform = $.cssProps.transform !== false || divStyle.filter === '' ? true : false;
