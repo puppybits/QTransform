@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script class="jsbin" src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.js"></script>
 <script src="qTransform.js"></script>
 <meta charset=utf-8 />
-<title>JS Bin - CSS3 Transform Prototype</title>
+<title>CSS3 Transform Prototype</title>
 <!--[if IE]>
   <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
 <![endif]-->
@@ -22,11 +23,32 @@
    hasLayout: true;
    zoom: 1;
 }
+scaleMe {
+    -webkit-transform: scaleX(2);
+    -moz-transform: scaleX(2);
+    -o-transform: scaleX(2);
+    -ms-transform: scaleX(2);
+    transform: scaleX(2);
+}
+translateMe {
+    -webkit-transform: translate(200px, 200px);
+    -moz-transform: translate(200px, 200px);
+    -o-transform: translate(200px, 200px);
+    -ms-transform: translate(200px, 200px);
+    transform: translate(200px, 200px);
+}
+originMe {
+    -webkit-transform-origin: 100% 100%;
+    -moz-transform-origin: 100% 100%;
+    -o-transform-origin: 100% 100%;
+    -ms-transform-origin: 100% 100%;
+    transform-origin: 100% 100%;
+}
+
 #hold { border: 1px solid gray;}
 </style>
 </head>
 <body>
-  <p id="hello">Hello World</p>
   <div id="hold">
   <div id="myDiv"></div>
   </div>
@@ -35,13 +57,14 @@
 
 
 $('#myDiv')
-  .animate({translate: 200}, 2000, 'swing')
+  .css('translate', 100)
+  .animate({translate: 200}, 1000, 'swing')
   .animate({translateY: 0}, 1000)
-  .animate({translateX: 100}, 2000)
+  .animate({translateX: 100}, 1000)
   .animate({scaleY: 0.3}, 2000)
   .animate({scaleX: 0.1}, 2000)
-  .animate({rotate: 2}, 2000)
   .animate({rotate: -2}, 2000, 'swing')
+  .animate({rotate: 0, transformOriginX:'0%', transformOriginY:'0%'}, 6000, 'swing')
   .animate({scale: 1}, 500, 'swing')
   .delay(300)
   .animate({rotate: 0}, 200 )

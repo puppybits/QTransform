@@ -27,15 +27,6 @@
         (divStyle.TransformOrigin === '' ? 'TransformOrigin' :
         false))));
         
-    $.cssHooks.transform = {
-        set: function(elem, val) {
-            elem.style[$.cssProps.transform] = val;
-        },
-        get: function(elem, computed) {
-            return elem.style[$.cssProps.transform];
-        }
-    }
-
     //define supported or not
     $.support.transform = $.cssProps.transform !== false || divStyle.filter === '' ? true : false;
     $.support.transformOrigin = $.cssProps.transformOrigin !== false ? true : false;
@@ -58,6 +49,123 @@
     $.cssNumber.scaleY =
     $.cssNumber.rotate = 
     $.cssNumber.matrix = true;
+    
+    $.cssNumber.transformOrigin = 
+    $.cssNumber.transformOriginX = 
+    $.cssNumber.transformOriginY = true; 
+    
+    
+    if($.support.matrixFilter) {
+        $.cssNumber.transformOrigin = 
+        $.cssNumber.transformOriginX = 
+        $.cssNumber.transformOriginY = true; 
+        
+        $.cssProps.transformOrigin = 'matrixFilter';
+    }
+
+    $.cssHooks.transform = {
+        set: function(elem, val, unit) {
+            if($.support.matrixFilter) {
+                elem.style.filter = [val].join('');
+            } else {
+                elem.style[$.cssProps.transform] = val+'%';
+            }
+        },
+        get: function(elem, computed) {
+            if($.support.matrixFilter) {
+                return elem.style.filter;
+            } else {
+                return elem.style[$.cssProps.transform];
+            }
+        }
+    };
+    
+    $.cssHooks.transformOrigin = {
+        set: function(elem, val, unit) {
+            if(!$.support.matrixFilter) {
+                val = (typeof val === 'string') ? val : val+(unit || '%');
+                elem.style[$.cssProps.transformOrigin] = val;
+            } else {
+                value = value.split(",");
+                $.cssHooks.transformOriginX.set( elem, val[0] );
+                if(val.length > 1) {
+                    $.cssHooks.transformOriginY.set( elem, val[1] );
+                }
+            }
+        },
+        get: function(elem, computed) {
+            if(!$.support.matrixFilter) {
+                return elem.style[$.cssProps.transformOrigin];
+            } else {
+                var originX = $.data( elem, 'transformOriginX' );
+                var originY = $.data( elem, 'transformOriginY' );
+                return originX && originY && originX === originY ? originX : '50%';
+            }
+        }
+    };
+    
+    $.fx.step.transformOrigin = function( fx ) {
+        $.cssHooks.transformOrigin.set( fx.elem, fx.now, fx.unit);
+     };
+    
+    $.cssHooks.transformOriginX = {
+        set: function(elem, val, unit) {
+            if(!$.support.matrixFilter) {
+                val = (typeof val === 'string') ? val : val+(unit || '%');
+                elem.style[$.cssProps.transformOrigin+'X'] = val;
+            } else {
+                if( /(?:px|%)/.exec(value).length > 1 ) return;
+                $.data( elem, 'transformOriginX', value );
+            }
+        },
+        get: function(elem, computed) {
+            if(!$.support.matrixFilter) {
+                return elem.style[$.cssProps.transformOrigin+'X'];
+            } else {
+                var originX = $.data( elem, 'transformOriginX' );
+                switch(originX) {
+                    case 'left': return '0%';
+                    case 'center': return '50%';
+                    case 'right': return '100%';
+                }
+                return originX ? originX : '50%';
+            }
+        }
+    };
+    
+    $.fx.step.transformOriginX = function( fx ) {
+        $.cssHooks.transformOriginX.set( fx.elem, fx.now, fx.unit);
+        console.log(fx.now+'-'+$(fx.elem).css('transformOrigin') +":"+fx.unit);
+     };
+    
+    $.cssHooks.transformOriginY = {
+        set: function(elem, val, unit) {
+            if(!$.support.matrixFilter) {
+                val = (typeof val === 'string') ? val : val+(unit || '%');
+                elem.style[$.cssProps.transformOrigin+'Y'] = val;
+            } else {
+                if( /(?:px|%)/.exec(value).length > 1 ) return;
+                $.data( elem, 'transformOriginY', value );
+            }
+        },
+        get: function(elem, computed) {
+            if(!$.support.matrixFilter) {
+                return elem.style[$.cssProps.transformOrigin+'Y'];
+            } else {
+                var originY = $.data( elem, 'transformOriginY' );
+                switch(originY) {
+                    case 'top': return '0%';
+                    case 'center': return '50%';
+                    case 'bottom': return '100%';
+                }
+                return originY ? originY : '50%';
+            }
+        }
+    };
+    
+    $.fx.step.transformOriginY = function( fx ) {
+        $.cssHooks.transformOriginY.set( fx.elem, fx.now, fx.unit);
+     };
 
     //create hooks for css transforms
     var rtn = function(v){return v;};
@@ -208,7 +316,6 @@
         
         //set all transform properties
         elem.style[$.cssProps.transform] = result;
-        console.log(elem.style[$.cssProps.transform]);
     }
 
     
@@ -258,64 +365,6 @@
           return rad * 180 / Math.PI;
       }
     };
-
-    //IE Matrix Handling
-
-    //  fake an origin (IE8)
-    if($.support.transformOrigin === false && $.support.matrixFilter === true) {
-        $.cssNumber.transformOrigin = 
-        $.cssNumber.transformOriginX = 
-        $.cssNumber.transformOriginY = true; 
-        
-        $.cssProps.transformOrigin = 'matrixFilter';
-        
-        $.cssHooks.transformOrigin = {
-            set: function(elem, val) {
-                value = value.split(" ");
-                $.cssHooks.transformOriginX.set( elem, val[0] );
-                $.cssHooks.transformOriginY.set( elem, val[1] || val[0] );
-            },
-            get: function(elem, value) {
-                var originX = $.data( elem, 'transformOriginX' );
-                var originY = $.data( elem, 'transformOriginY' );
-                return originX && originY && originX === originY ? originX : '50%';
-            }
-        };
-        
-        $.cssHooks.transformOriginX = {
-            set: function(elem, value) {
-                //not supporting em or pt
-                if( /(?:px|%)/.exec(value).length > 1 ) return;
-                $.data( elem, 'transformOriginX', value );
-            },
-            get: function(elem, value) {
-                var originX = $.data( elem, 'transformOriginX' );
-                switch(originX) {
-                    case 'left': return '0%';
-                    case 'center': return '50%';
-                    case 'right': return '100%';
-                }
-                return originX ? originX : '50%';
-            }
-        };
-        
-        $.cssHooks.transformOriginY = {
-            set: function(elem, value) {
-                //not supporting em or pt
-                if( /(?:px|%)/.exec(value).length > 1 ) return;
-                $.data( elem, 'transformOriginY', value );
-            },
-            get: function(elem, value) {
-                var originY = $.data( elem, 'transformOriginY' );
-                switch(originY) {
-                    case 'top': return '0%';
-                    case 'center': return '50%';
-                    case 'bottom': return '100%';
-                }
-                return originY ? originY : '50%';
-            }
-        };
-    }
 
     //special case for IE matrix
     function setIEMatrix( elem, mat ) {
