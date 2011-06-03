@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" >
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1/jquery-ui.js"></script>
 <script src="qTransform.js"></script>
@@ -17,8 +18,8 @@
    background-color: #FF0;
    position: absolute;
    padding: -80px;
-   width: 200px;
-   height: 200px;
+   width: 100px;
+   height: 100px;
    border: 1px solid green;
    hasLayout: true;
    zoom: 1;
@@ -52,22 +53,45 @@ originMe {
   <div id="hold">
   <div id="myDiv"></div>
   </div>
+  <div id="console"></div>
 </body>
 <script>
 
+var log = function(string) {
+    $('#console').html(string);
+}
+
+log('center rotate');
 
 $('#myDiv')
   .css('translate', 100)
+  .css('rotate', -1)
+  .css({transformOriginX:'100%', transformOriginY:'100%'})
+  .css('transformOrigin', '0%,0%')
+  .delay(1000)
+  
+  .animate({rotate: 0.28}, 900, function(){log('bottom right rotate')})
+  .delay(1000)
+  .animate({transformOriginX:'100%', transformOriginY:'100%'}, 10)
+  
+  .animate({rotate: 2}, 3000, function(){log('translate')})
+  
+  .animate({transformOriginX:'50%', transformOriginY:'50%'}, 1000)
+  .delay(1000)
   .animate({translate: 200}, 1000, 'swing')
   .animate({translateY: 0}, 1000)
-  .animate({translateX: 100}, 1000)
+  .animate({translateX: 100}, 1000, function(){log('scale')})
+  .delay(1000)
   .animate({scaleY: 0.3}, 2000)
   .animate({scaleX: 0.1}, 2000)
-  .animate({rotate: -2}, 2000, 'swing')
-  .animate({rotate: 0, transformOriginX:'0%', transformOriginY:'0%'}, 6000, 'swing')
   .animate({scale: 1}, 500, 'swing')
+  .animate({rotate: -0.785}, 2000, 'swing')
+  
+  .animate({scale: 1}, 500, 'swing', function(){log('add rotation and swing origin')})
+  .animate({rotate: '+=90deg', transformOriginX:'0%', transformOriginY:'0%'}, 3000, 'swing')
+  
   .delay(300)
-  .animate({rotate: 0}, 200 )
+  .animate({rotate: '0deg', translateX: '300px', translateY:'300px'}, 2000 )
 
 </script>
 </html>

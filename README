@@ -1,0 +1,24 @@
+/********************
+*     COMPLETED     *
+*********************/
+v0.8    - scale, skew, rotate, translate working cross-browser                      12.14.2010
+v0.9    - transform origin working in IE                                            12.17.2010
+v0.91   - add hooks for CSS_3 transform-origin                                      12.18.2010
+v0.91.1 - add support for IE9 transforms                                            06.03.2010
+
+/********************
+*      PLANNED      *
+*********************/
+v0.91.2 - fix transform-origin-x/-y in IE9
+v0.92   - research adding to jQueryUI
+            needs pseudo-css classes for the actual style name
+            needs a way to add custom includes in the jQuery filterStyle function
+v0.95   - add hooks for CSS_3 matrix                                                
+-- MILESTONE --
+v1      - add unit tests                                                            
+            single instance of each transform property
+            animatable 
+            unit tests
+-- MILESTONE --
+v1.5    - support for webkit 3d transforms                                          
+

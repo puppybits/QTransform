@@ -14,14 +14,14 @@
     //give props to those who dont have them
     $.cssProps.transform = 
         divStyle.MozTransform === '' ? 'MozTransform' :
-        (divStyle.MsTransform === '' ? 'MsTransform' :
+        (divStyle.msTransform === '' ? 'msTransform' :
         (divStyle.WebkitTransform === '' ? 'WebkitTransform' :
         (divStyle.OTransform === '' ? 'OTransform' :
         (divStyle.Transform === '' ? 'Transform' :
         false))));
     $.cssProps.transformOrigin = 
         divStyle.MozTransformOrigin === '' ? 'MozTransformOrigin' :
-        (divStyle.MsTransformOrigin === '' ? 'MsTransformOrigin' :
+        (divStyle.msTransformOrigin === '' ? 'msTransformOrigin' :
         (divStyle.WebkitTransformOrigin === '' ? 'WebkitTransformOrigin' :
         (divStyle.OTransformOrigin === '' ? 'OTransformOrigin' :
         (divStyle.TransformOrigin === '' ? 'TransformOrigin' :
@@ -86,7 +86,7 @@
                 val = (typeof val === 'string') ? val : val+(unit || '%');
                 elem.style[$.cssProps.transformOrigin] = val;
             } else {
-                value = value.split(",");
+                val = val.split(",");
                 $.cssHooks.transformOriginX.set( elem, val[0] );
                 if(val.length > 1) {
                     $.cssHooks.transformOriginY.set( elem, val[1] );
@@ -114,8 +114,8 @@
                 val = (typeof val === 'string') ? val : val+(unit || '%');
                 elem.style[$.cssProps.transformOrigin+'X'] = val;
             } else {
-                if( /(?:px|%)/.exec(value).length > 1 ) return;
-                $.data( elem, 'transformOriginX', value );
+                $.data( elem, 'transformOriginX', unit ? val+unit : val );
+                setIEMatrix(elem);
             }
         },
         get: function(elem, computed) {
@@ -135,7 +135,6 @@
     
     $.fx.step.transformOriginX = function( fx ) {
         $.cssHooks.transformOriginX.set( fx.elem, fx.now, fx.unit);
-        console.log(fx.now+'-'+$(fx.elem).css('transformOrigin') +":"+fx.unit);
      };
     
     $.cssHooks.transformOriginY = {
@@ -144,8 +143,8 @@
                 val = (typeof val === 'string') ? val : val+(unit || '%');
                 elem.style[$.cssProps.transformOrigin+'Y'] = val;
             } else {
-                if( /(?:px|%)/.exec(value).length > 1 ) return;
-                $.data( elem, 'transformOriginY', value );
+                $.data( elem, 'transformOriginY', unit ? val+unit : val );
+                setIEMatrix(elem);
             }
         },
         get: function(elem, computed) {
@@ -199,6 +198,7 @@
             matrix: [[1,0,0,1,rtn,rtn],
                 [1,0,0,1,rtn,0],
                 [1,0,0,1,0,rtn]],
+            standardUnit: 'px',
             subProps: xy,
             fnc: parseFloat},
         {prop: 'matrix',
@@ -240,21 +240,24 @@
                 _cssProp = _prop.prop+sub;
                 $.cssHooks[_cssProp] = {
                     set: function( elem, val, unit ) {
-                        val = _prop.fnc(val);
-                        $.data( elem, _cssProp, val);
+                        $.data( elem, _cssProp, unit ? val+unit : val);
 
-                        setCSSTransform( elem, val, _cssProp, unit || _prop.unit);
+                        setCSSTransform( elem, _prop.fnc(unit ? val+unit : val), _cssProp,
+                         _prop.unit || unit || _prop.standardUnit);
                     },
                     get: function( elem, computed ) {
+                        
                         var p = $.data( elem, _cssProp );
-                        return p ? p : _prop._default || 0;
+                        //console.log(_cssProp+'get:'+p);
+                        return p && p !== undefined ? p : _prop._default || 0;
                     }
                 };
             }
 
             $.fx.step[_cssProp] = function( fx ) {
+                fx.unit = fx.unit === 'px' && $.cssNumber[_cssProp] ? _prop.standardUnit : fx.unit;
                 var unit = ($.cssNumber[_cssProp] ? '' : fx.unit);
-                $.cssHooks[_cssProp].set( fx.elem, fx.now, unit);
+                $.cssHooks[_cssProp].set( fx.elem, fx.now, fx.unit);
              };
         })
     });
@@ -278,7 +281,7 @@
         var wasUpdated = false;
         var arr;
         if(allProps !== null) {
-            for(item in allProps) {
+            for(var item in allProps) {
                 arr = allProps[item];
                 if(prop === item) {
                     //update parsed data with new value
@@ -372,8 +375,8 @@
         runTransform = $.cssProps.transformOrigin === 'matrixFilter' ? true : false;
 
         current = [$.cssHooks.scaleX.get(elem),
-                    $.cssHooks.skewY.get(elem),
-                    $.cssHooks.skewX.get(elem),
+                    toRadian($.cssHooks.skewY.get(elem)),
+                    toRadian($.cssHooks.skewX.get(elem)),
                     $.cssHooks.scaleY.get(elem),
                     $.cssHooks.translateX.get(elem),
                     $.cssHooks.translateY.get(elem)];
@@ -386,9 +389,9 @@
             ].join('');
             var Wp = $.cssHooks.transformOriginX.get(elem);
             var Hp = $.cssHooks.transformOriginY.get(elem);
-            Wp = Wp.indexOf('%') > 1 ? 
+            Wp = Wp.indexOf('%') > 0 ? 
                 (/[\d]*/.exec(Wp) / 100) : Wp;
-            Hp = Hp.indexOf('%') > 1 ? 
+            Hp = Hp.indexOf('%') > 0 ? 
                 (/[\d]*/.exec(Hp) / 100) : Hp;
 
             var Wb = elem.offsetWidth;
@@ -411,6 +414,7 @@
         //multiply the transform and rotation matrixes
         ang = $.data(elem, 'rotate');
         if(ang) {
+            ang = toRadian(ang);
             var cos = Math.cos(ang);
             var sin = Math.sin(ang);
 
@@ -439,9 +443,12 @@
             var Wo = elem.offsetWidth;
             var Ho = elem.offsetHeight;
             elem.style.position = 'relative';
-            elem.style.left = Wp * (Wb - Wo) + (mat[4] || 0);
-            elem.style.top  = Hp * (Hb - Ho) + (mat[5] || 0);
+            elem.style.left = Wp * (Wb - Wo) + (parseInt(mat[4]) || 0);
+            elem.style.top  = Hp * (Hb - Ho) + (parseInt(mat[5]) || 0);
         }
+            //$('#console').append('<div> trans:'+Wp+":"+Wb+":"+Wo+":"+mat[4]+":"+elem.style.left+'</div>');
+        
+        
     }
 
 })(jQuery);
